@@ -1,6 +1,6 @@
 # Environment variables & secrets
 .env
-.env.dev
+.env
 .env*.local
 
 # Exception: keep example environment files
