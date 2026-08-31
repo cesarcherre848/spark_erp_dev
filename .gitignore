@@ -1,0 +1,16 @@
+# Environment variables & secrets
+.env
+.env.dev
+.env*.local
+
+# Exception: keep example environment files
+!.env.dev.example
+
+# Runtime data, logs & OS files
+*.log
+.DS_Store
+*.pyc
+__pycache__/
+
+# Keep gitkeep placeholders
+!.gitkeep

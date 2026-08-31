@@ -1,0 +1,7 @@
+# Lista declarativa de módulos para Spark ERP
+# Registrar un nombre de módulo por línea
+
+# Módulos Personalizados (addons/custom)
+# spark_base
+# spark_inventory_ext
+

@@ -1,0 +1,25 @@
+name: spark-erp-dev
+
+services:
+  web:
+    image: odoo:19.0
+    container_name: spark_odoo_19_dev
+    restart: unless-stopped
+    command: >
+      odoo 
+      -c /etc/odoo/odoo.conf 
+      -d spark_erp_db_dev 
+      --db-filter=^spark_erp_db_dev$
+    env_file:
+      - .env.dev
+    ports:
+      - "${PORT_HTTP:-8069}:8069"
+      - "${PORT_LONGPOLLING:-8072}:8072"
+    volumes:
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ./addons/custom:/mnt/extra-addons/custom
+      - odoo-web-data-dev:/var/lib/odoo
+
+volumes:
+  odoo-web-data-dev:
+    driver: local
