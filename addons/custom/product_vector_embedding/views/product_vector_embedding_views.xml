@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Lista (List) -->
+    <record id="view_product_vector_embedding_list" model="ir.ui.view">
+        <field name="name">product.vector.embedding.list</field>
+        <field name="model">product.vector.embedding</field>
+        <field name="arch" type="xml">
+            <list string="Embeddings de Productos" create="true" edit="true" delete="true">
+                <field name="name"/>
+                <field name="sku"/>
+                <field name="product_id"/>
+                <field name="product_tmpl_id"/>
+                <field name="ai_provider" widget="badge"/>
+                <field name="ai_model"/>
+                <field name="dimension"/>
+                <field name="content_hash"/>
+                <field name="write_date" string="Última Sincronización"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Formulario (Form) -->
+    <record id="view_product_vector_embedding_form" model="ir.ui.view">
+        <field name="name">product.vector.embedding.form</field>
+        <field name="model">product.vector.embedding</field>
+        <field name="arch" type="xml">
+            <form string="Embedding de Producto">
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Referencia"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Producto Vinculado">
+                            <field name="product_id"/>
+                            <field name="product_tmpl_id"/>
+                            <field name="sku"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="Metadatos de Inteligencia Artificial">
+                            <field name="ai_provider"/>
+                            <field name="ai_model"/>
+                            <field name="dimension"/>
+                            <field name="content_hash"/>
+                            <field name="write_date" string="Última Sincronización" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Texto Origen Vectorizado" name="source_text">
+                            <field name="source_text" placeholder="Texto descriptivo exacto que se vectorizó..." widget="text"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de Búsqueda y Filtros (Search) -->
+    <record id="view_product_vector_embedding_search" model="ir.ui.view">
+        <field name="name">product.vector.embedding.search</field>
+        <field name="model">product.vector.embedding</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Embeddings">
+                <field name="name"/>
+                <field name="sku"/>
+                <field name="product_id"/>
+                <field name="product_tmpl_id"/>
+                <field name="ai_model"/>
+                <field name="content_hash"/>
+                <separator/>
+                <filter string="Archivados" name="inactive" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Producto" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Modelo de IA" name="group_model" context="{'group_by': 'ai_model'}"/>
+                    <filter string="Proveedor" name="group_provider" context="{'group_by': 'ai_provider'}"/>
+                    <filter string="Dimensión" name="group_dimension" context="{'group_by': 'dimension'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana -->
+    <record id="action_product_vector_embedding" model="ir.actions.act_window">
+        <field name="name">Embeddings de Productos</field>
+        <field name="res_model">product.vector.embedding</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_vector_embedding_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay embeddings de productos registrados aún.
+            </p>
+            <p>
+                Los embeddings vectoriales son sincronizados automáticamente por el servicio externo de IA.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú bajo Ajustes -> Técnico -->
+    <menuitem id="menu_product_vector_embedding_root"
+              name="Embeddings de Productos"
+              parent="base.menu_custom"
+              action="action_product_vector_embedding"
+              sequence="50"/>
+
+</odoo>

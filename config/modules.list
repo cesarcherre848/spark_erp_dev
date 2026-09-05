@@ -2,6 +2,7 @@
 # Registrar un nombre de módulo por línea
 
 # Módulos Personalizados (addons/custom)
+product_vector_embedding
 # spark_base
 # spark_inventory_ext
 
