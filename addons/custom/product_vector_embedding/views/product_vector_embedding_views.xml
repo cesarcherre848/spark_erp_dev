@@ -8,7 +8,6 @@
         <field name="arch" type="xml">
             <list string="Embeddings de Productos" create="true" edit="true" delete="true">
                 <field name="name"/>
-                <field name="sku"/>
                 <field name="product_id"/>
                 <field name="product_tmpl_id"/>
                 <field name="ai_provider" widget="badge"/>
@@ -38,7 +37,6 @@
                         <group string="Producto Vinculado">
                             <field name="product_id"/>
                             <field name="product_tmpl_id"/>
-                            <field name="sku"/>
                             <field name="active" invisible="1"/>
                         </group>
                         <group string="Metadatos de Inteligencia Artificial">
@@ -66,7 +64,6 @@
         <field name="arch" type="xml">
             <search string="Buscar Embeddings">
                 <field name="name"/>
-                <field name="sku"/>
                 <field name="product_id"/>
                 <field name="product_tmpl_id"/>
                 <field name="ai_model"/>

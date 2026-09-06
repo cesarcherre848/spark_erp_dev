@@ -30,12 +30,6 @@ class ProductVectorEmbedding(models.Model):
         ondelete='cascade',
         index=True
     )
-    sku = fields.Char(
-        string='SKU',
-        related='product_id.default_code',
-        store=True,
-        index=True
-    )
     ai_provider = fields.Selection([
         ('openai', 'OpenAI'),
         ('gemini', 'Google Gemini'),
@@ -67,11 +61,15 @@ class ProductVectorEmbedding(models.Model):
         default=True
     )
 
-    @api.depends('product_id', 'product_tmpl_id', 'ai_model', 'sku')
+    @api.depends('product_id.default_code', 'product_id.display_name', 'product_tmpl_id.name', 'ai_model')
     def _compute_name(self):
         for rec in self:
-            sku_label = rec.sku or (rec.product_id.display_name if rec.product_id else (rec.product_tmpl_id.name if rec.product_tmpl_id else 'Sin Producto'))
-            rec.name = f"[{rec.ai_model or 'AI'}] {sku_label}"
+            prod_label = (
+                rec.product_id.default_code or rec.product_id.display_name
+                if rec.product_id
+                else (rec.product_tmpl_id.name if rec.product_tmpl_id else 'Sin Producto')
+            )
+            rec.name = f"[{rec.ai_model or 'AI'}] {prod_label}"
 
     @api.model
     def compute_content_hash(self, text: str) -> str:
