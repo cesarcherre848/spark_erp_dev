@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Lista (List) -->
+    <record id="view_sale_incentive_list" model="ir.ui.view">
+        <field name="name">sale.incentive.list</field>
+        <field name="model">sale.incentive</field>
+        <field name="arch" type="xml">
+            <list string="Planes de Incentivos de Proveedores" decoration-muted="not active">
+                <field name="partner_id" string="Proveedor"/>
+                <field name="title"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-info="state == 'upcoming'"
+                       decoration-danger="state == 'expired'"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Formulario (Form) -->
+    <record id="view_sale_incentive_form" model="ir.ui.view">
+        <field name="name">sale.incentive.form</field>
+        <field name="model">sale.incentive</field>
+        <field name="arch" type="xml">
+            <form string="Plan de Incentivos de Proveedor">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="upcoming,active,expired"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="title" string="Título del Incentivo"/>
+                        <h1>
+                            <field name="title" placeholder="Ej. GanaMás Nivel 1 Bicampaña / Escala Comercial 35%"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Proveedor / Fabricante">
+                            <field name="partner_id"
+                                   string="Proveedor"
+                                   context="{'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1}"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="Vigencia Temporal">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="is_valid" readonly="1" widget="boolean"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Descripción del Beneficio" name="description">
+                            <field name="description" placeholder="Detalle y especificaciones del producto, premio o beneficio..." widget="text"/>
+                        </page>
+                        <page string="Observaciones y Condiciones" name="observations">
+                            <field name="observations" placeholder="Condiciones comerciales, metas de compra o requisitos de calificación..." widget="text"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda y Filtros (Search) -->
+    <record id="view_sale_incentive_search" model="ir.ui.view">
+        <field name="name">sale.incentive.search</field>
+        <field name="model">sale.incentive</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Incentivos de Proveedores">
+                <field name="partner_id" string="Proveedor"/>
+                <field name="title" string="Título"/>
+                <separator/>
+                <filter string="Vigentes" name="active_now" domain="[('state', '=', 'active')]"/>
+                <filter string="Por Iniciar" name="upcoming" domain="[('state', '=', 'upcoming')]"/>
+                <filter string="Vencidos" name="expired" domain="[('state', '=', 'expired')]"/>
+                <separator/>
+                <filter string="Archivados" name="inactive" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Proveedor" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Título" name="group_title" context="{'group_by': 'title'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana -->
+    <record id="action_sale_incentive" model="ir.actions.act_window">
+        <field name="name">Incentivos de Proveedores</field>
+        <field name="res_model">sale.incentive</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_sale_incentive_search"/>
+        <field name="context">{'search_default_active_now': 1, 'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Registra un nuevo plan de incentivo de proveedor.
+            </p>
+            <p>
+                Define planes de beneficios o acuerdos otorgados por proveedores con fechas de vigencia configurables.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú dentro del módulo de Ventas (Ventas -> Pedidos -> Incentivos de Proveedores) -->
+    <menuitem id="menu_sale_incentive_root"
+              name="Incentivos de Proveedores"
+              parent="sale.sale_order_menu"
+              action="action_sale_incentive"
+              sequence="25"/>
+
+</odoo>

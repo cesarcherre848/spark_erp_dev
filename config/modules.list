@@ -3,6 +3,7 @@
 
 # Módulos Personalizados (addons/custom)
 product_vector_embedding
+sales_incentives
 # spark_base
 # spark_inventory_ext
 

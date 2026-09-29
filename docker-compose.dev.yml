@@ -2,7 +2,10 @@ name: spark-erp-dev
 
 services:
   web:
-    image: odoo:19.0
+    image: spark_odoo_19_dev:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: spark_odoo_19_dev
     restart: unless-stopped
     command: >

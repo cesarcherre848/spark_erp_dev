@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_inherit_sales_incentives" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.sales.incentives</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Smart Button en cabecera -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button"
+                        type="object"
+                        name="action_view_incentives"
+                        icon="fa-gift">
+                    <field string="Incentivos Prov." name="incentive_count" widget="statinfo"/>
+                </button>
+            </xpath>
+
+            <!-- Pestaña en notebook para editar directamente los planes por proveedor -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Incentivos de Proveedor" name="supplier_incentives">
+                    <field name="incentive_ids"
+                           context="{'default_partner_id': id, 'default_supplier_rank': 1, 'res_partner_search_mode': 'supplier'}">
+                        <list editable="bottom" decoration-muted="not active">
+                            <field name="title"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="state"
+                                   widget="badge"
+                                   decoration-success="state == 'active'"
+                                   decoration-info="state == 'upcoming'"
+                                   decoration-danger="state == 'expired'"/>
+                            <field name="description" optional="hide"/>
+                            <field name="observations" optional="show"/>
+                            <field name="active" widget="boolean_toggle" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
