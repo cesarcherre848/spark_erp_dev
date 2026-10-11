@@ -107,10 +107,27 @@ class SalesIncentivesApiController(http.Controller):
         elif only_active:
             validity_dt = fields.Datetime.now()
 
-        # 3. Construcción del dominio de búsqueda
+        # 3. Filtro por etiquetas (tag_ids o tag_id o tag)
+        tag_param = params.get('tag_ids') or params.get('tag_id')
+        tag_name = params.get('tag')
+        tag_ids_filter = []
+        if tag_param:
+            if isinstance(tag_param, (list, tuple)):
+                tag_ids_filter = [int(x) for x in tag_param if str(x).isdigit()]
+            elif isinstance(tag_param, str):
+                tag_ids_filter = [int(x.strip()) for x in tag_param.split(',') if x.strip().isdigit()]
+            elif isinstance(tag_param, int):
+                tag_ids_filter = [tag_param]
+
+        # 4. Construcción del dominio de búsqueda
         domain = [('active', '=', True)]
         if partner_id:
             domain.append(('partner_id', '=', partner_id))
+
+        if tag_ids_filter:
+            domain.append(('tag_ids', 'in', tag_ids_filter))
+        elif tag_name:
+            domain.append(('tag_ids.name', 'ilike', str(tag_name).strip()))
 
         if validity_dt:
             domain.extend([
@@ -120,7 +137,7 @@ class SalesIncentivesApiController(http.Controller):
                 ('date_end', '>=', validity_dt)
             ])
 
-        # 4. Paginación
+        # 5. Paginación
         try:
             limit = min(int(params.get('limit', 50)), 200)
             offset = max(int(params.get('offset', 0)), 0)
@@ -128,7 +145,7 @@ class SalesIncentivesApiController(http.Controller):
             limit = 50
             offset = 0
 
-        # 5. Ejecución de consulta con sudo
+        # 6. Ejecución de consulta con sudo
         incentive_model = request.env['sale.incentive'].sudo()
         total_count = incentive_model.search_count(domain)
         records = incentive_model.search(domain, limit=limit, offset=offset, order='date_start desc, id desc')
@@ -149,6 +166,8 @@ class SalesIncentivesApiController(http.Controller):
                 'observations': rec.observations or '',
                 'benefit_plan': rec.title,
                 'notes': rec.observations or '',
+                'tag_ids': rec.tag_ids.ids,
+                'tags': [{'id': t.id, 'name': t.name, 'color': t.color or ''} for t in rec.tag_ids],
                 'date_start': fields.Datetime.to_string(rec.date_start),
                 'date_end': fields.Datetime.to_string(rec.date_end) if rec.date_end else None,
                 'state': rec.state,
@@ -166,6 +185,8 @@ class SalesIncentivesApiController(http.Controller):
                 'supplier_name': partner_obj.name if partner_obj else None,
                 'partner_id': partner_id,
                 'partner_name': partner_obj.name if partner_obj else None,
+                'tag_ids': tag_ids_filter if tag_ids_filter else None,
+                'tag': tag_name if tag_name else None,
                 'validity_date': fields.Datetime.to_string(validity_dt) if validity_dt else None,
                 'only_active': only_active,
             },
@@ -186,10 +207,26 @@ class SalesIncentivesApiController(http.Controller):
         partner_id = kwargs.get('supplier_id') or kwargs.get('partner_id')
         validity_date_raw = kwargs.get('validity_date') or kwargs.get('date')
         only_active = bool(kwargs.get('only_active', False))
+        tag_param = kwargs.get('tag_ids') or kwargs.get('tag_id')
+        tag_name = kwargs.get('tag')
+
+        tag_ids_filter = []
+        if tag_param:
+            if isinstance(tag_param, (list, tuple)):
+                tag_ids_filter = [int(x) for x in tag_param if str(x).isdigit()]
+            elif isinstance(tag_param, str):
+                tag_ids_filter = [int(x.strip()) for x in tag_param.split(',') if x.strip().isdigit()]
+            elif isinstance(tag_param, int):
+                tag_ids_filter = [tag_param]
 
         domain = [('active', '=', True)]
         if partner_id:
             domain.append(('partner_id', '=', int(partner_id)))
+
+        if tag_ids_filter:
+            domain.append(('tag_ids', 'in', tag_ids_filter))
+        elif tag_name:
+            domain.append(('tag_ids.name', 'ilike', str(tag_name).strip()))
 
         validity_dt = None
         if validity_date_raw:
@@ -223,6 +260,8 @@ class SalesIncentivesApiController(http.Controller):
                 'observations': rec.observations or '',
                 'benefit_plan': rec.title,
                 'notes': rec.observations or '',
+                'tag_ids': rec.tag_ids.ids,
+                'tags': [{'id': t.id, 'name': t.name, 'color': t.color or ''} for t in rec.tag_ids],
                 'date_start': fields.Datetime.to_string(rec.date_start),
                 'date_end': fields.Datetime.to_string(rec.date_end) if rec.date_end else None,
                 'state': rec.state,

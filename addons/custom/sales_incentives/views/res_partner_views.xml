@@ -23,6 +23,7 @@
                            context="{'default_partner_id': id, 'default_supplier_rank': 1, 'res_partner_search_mode': 'supplier'}">
                         <list editable="bottom" decoration-muted="not active">
                             <field name="title"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
                             <field name="date_start"/>
                             <field name="date_end"/>
                             <field name="state"

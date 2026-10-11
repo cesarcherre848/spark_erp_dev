@@ -17,6 +17,14 @@ class TestSalesIncentives(TransactionCase):
             'supplier_rank': 1,
         })
         cls.now = fields.Datetime.now()
+        cls.tag_c10 = cls.env['product.tag'].create({
+            'name': 'Catálogo C10',
+            'color': '1',
+        })
+        cls.tag_c11 = cls.env['product.tag'].create({
+            'name': 'Catálogo C11',
+            'color': '2',
+        })
 
     def test_01_create_incentive_indefinite_success(self):
         """Prueba creación exitosa con inicio obligatorio y fin nulo (indefinido)."""
@@ -111,3 +119,45 @@ class TestSalesIncentives(TransactionCase):
         self.assertFalse(inc.is_valid_at(self.now - timedelta(days=15)))
         # No válido después de fin
         self.assertFalse(inc.is_valid_at(self.now + timedelta(days=15)))
+
+    def test_06_incentive_tags(self):
+        """Verifica la asignación, persistencia y búsqueda por etiquetas (product.tag)."""
+        inc_c10 = self.env['sale.incentive'].create({
+            'partner_id': self.partner.id,
+            'title': 'Bono Especial Catálogo C10',
+            'date_start': self.now,
+            'tag_ids': [(6, 0, [self.tag_c10.id])],
+        })
+        inc_both = self.env['sale.incentive'].create({
+            'partner_id': self.partner.id,
+            'title': 'Bono Bicampaña C10 + C11',
+            'date_start': self.now,
+            'tag_ids': [(6, 0, [self.tag_c10.id, self.tag_c11.id])],
+        })
+        inc_none = self.env['sale.incentive'].create({
+            'partner_id': self.partner.id,
+            'title': 'Plan Sin Etiquetas',
+            'date_start': self.now,
+        })
+
+        # Comprobar tags asignados
+        self.assertIn(self.tag_c10, inc_c10.tag_ids)
+        self.assertEqual(len(inc_c10.tag_ids), 1)
+
+        self.assertIn(self.tag_c10, inc_both.tag_ids)
+        self.assertIn(self.tag_c11, inc_both.tag_ids)
+        self.assertEqual(len(inc_both.tag_ids), 2)
+
+        self.assertEqual(len(inc_none.tag_ids), 0)
+
+        # Comprobar búsqueda por tag_ids
+        search_c10 = self.env['sale.incentive'].search([('tag_ids', 'in', [self.tag_c10.id])])
+        self.assertIn(inc_c10, search_c10)
+        self.assertIn(inc_both, search_c10)
+        self.assertNotIn(inc_none, search_c10)
+
+        search_c11 = self.env['sale.incentive'].search([('tag_ids', 'in', [self.tag_c11.id])])
+        self.assertNotIn(inc_c10, search_c11)
+        self.assertIn(inc_both, search_c11)
+        self.assertNotIn(inc_none, search_c11)
+

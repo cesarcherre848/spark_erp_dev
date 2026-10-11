@@ -37,6 +37,14 @@ class SaleIncentive(models.Model):
         string='Observaciones',
         help='Condiciones comerciales, restricciones de entrega o requisitos de calificación.'
     )
+    tag_ids = fields.Many2many(
+        'product.tag',
+        'sale_incentive_product_tag_rel',
+        'incentive_id',
+        'tag_id',
+        string='Etiquetas',
+        help='Etiquetas de metadatos de producto asociadas al incentivo (ej. Catálogos C10, C11, familias de producto).'
+    )
     date_start = fields.Datetime(
         string='Fecha Inicio',
         required=True,

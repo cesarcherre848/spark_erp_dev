@@ -9,6 +9,7 @@
             <list string="Planes de Incentivos de Proveedores" decoration-muted="not active">
                 <field name="partner_id" string="Proveedor"/>
                 <field name="title"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="state"
@@ -38,6 +39,7 @@
                         <h1>
                             <field name="title" placeholder="Ej. GanaMás Nivel 1 Bicampaña / Escala Comercial 35%"/>
                         </h1>
+                        <field name="tag_ids" widget="many2many_tags" placeholder="Etiquetas (ej. C10, C11, Línea Facial)..." options="{'color_field': 'color'}"/>
                     </div>
                     <group>
                         <group string="Proveedor / Fabricante">
@@ -74,6 +76,7 @@
             <search string="Buscar Incentivos de Proveedores">
                 <field name="partner_id" string="Proveedor"/>
                 <field name="title" string="Título"/>
+                <field name="tag_ids" string="Etiquetas"/>
                 <separator/>
                 <filter string="Vigentes" name="active_now" domain="[('state', '=', 'active')]"/>
                 <filter string="Por Iniciar" name="upcoming" domain="[('state', '=', 'upcoming')]"/>
@@ -84,6 +87,7 @@
                     <filter string="Proveedor" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Título" name="group_title" context="{'group_by': 'title'}"/>
                     <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Etiquetas" name="group_tags" context="{'group_by': 'tag_ids'}"/>
                 </group>
             </search>
         </field>
