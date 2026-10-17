@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista Lista (List) de Catálogos de Proveedor -->
+    <record id="view_product_catalog_list" model="ir.ui.view">
+        <field name="name">product.catalog.list</field>
+        <field name="model">product.catalog</field>
+        <field name="arch" type="xml">
+            <list string="Catálogos de Productos de Proveedores" decoration-muted="not active">
+                <field name="partner_id" string="Proveedor"/>
+                <field name="title"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
+                <field name="page_count" string="Páginas"/>
+                <field name="embedding_count" string="Embeddings"/>
+                <field name="index_progress" widget="progressbar" string="Avance Chunking"/>
+                <field name="index_state"
+                       string="Estado Chunking"
+                       widget="badge"
+                       decoration-muted="index_state == 'pending'"
+                       decoration-warning="index_state == 'processing'"
+                       decoration-success="index_state == 'done'"
+                       decoration-danger="index_state == 'error'"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="state"
+                       string="Vigencia"
+                       widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-info="state == 'upcoming'"
+                       decoration-danger="state == 'expired'"/>
+                <field name="ai_model" optional="hide"/>
+                <field name="target_dimension" optional="hide"/>
+                <field name="active" widget="boolean_toggle" optional="hide"/>
+                <button name="action_start_chunking"
+                        type="object"
+                        string="Chunking"
+                        icon="fa-play"
+                        class="btn-link"
+                        invisible="index_state == 'processing'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Formulario (Form) de Catálogo de Proveedor -->
+    <record id="view_product_catalog_form" model="ir.ui.view">
+        <field name="name">product.catalog.form</field>
+        <field name="model">product.catalog</field>
+        <field name="arch" type="xml">
+            <form string="Catálogo de Productos de Proveedor">
+                <header>
+                    <!-- Botón manual para iniciar cuando no ha empezado o dio error -->
+                    <button name="action_start_chunking"
+                            string="Iniciar Chunking y Embeddings"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-play"
+                            invisible="index_state in ('processing', 'done')"/>
+
+                    <!-- Botón manual para re-ejecutar cuando ya finalizó -->
+                    <button name="action_start_chunking"
+                            string="Re-procesar Chunking"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-refresh"
+                            invisible="index_state != 'done'"/>
+
+                    <!-- Botón manual para reiniciar si se quedó en curso -->
+                    <button name="action_reset_chunking"
+                            string="Reiniciar Estado"
+                            type="object"
+                            class="btn-warning"
+                            icon="fa-undo"
+                            invisible="index_state != 'processing'"/>
+
+                    <!-- Statusbar visible del Estado de Chunking -->
+                    <field name="index_state"
+                           widget="statusbar"
+                           statusbar_visible="pending,processing,done"/>
+                </header>
+
+                <!-- Banners informativos según el estado del chunking -->
+                <div class="alert alert-info mb-0" role="alert" invisible="index_state != 'processing'">
+                    <i class="fa fa-spinner fa-spin me-2" title="Procesando"/>
+                    <strong>Chunking y Vectorización en Curso:</strong>
+                    Procesando páginas del PDF con <field name="ai_model" readonly="1" class="oe_inline fw-bold"/>
+                    (<field name="indexed_pages" readonly="1" class="oe_inline"/> de <field name="page_count" readonly="1" class="oe_inline"/> páginas).
+                </div>
+                <div class="alert alert-danger mb-0" role="alert" invisible="index_state != 'error'">
+                    <i class="fa fa-exclamation-triangle me-2" title="Error"/>
+                    <strong>Error durante el Chunking:</strong>
+                    Revise la pestaña <em>Registro de Procesamiento IA (Logs)</em> y utilice el botón <strong>Iniciar Chunking y Embeddings</strong> para reintentar.
+                </div>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="action_view_embeddings"
+                                icon="fa-database">
+                            <field string="Chunks / Vectores" name="embedding_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="action_view_embeddings"
+                                icon="fa-file-pdf-o">
+                            <field string="Páginas PDF" name="page_count" widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="Archivado" bg_color="text-bg-danger" invisible="active"/>
+
+                    <div class="oe_title">
+                        <label for="title" string="Título del Catálogo"/>
+                        <h1>
+                            <field name="title" placeholder="Ej. Catálogo Campaña C10 - Cuidado Personal y Fragancias"/>
+                        </h1>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <field name="state"
+                                   widget="badge"
+                                   decoration-success="state == 'active'"
+                                   decoration-info="state == 'upcoming'"
+                                   decoration-danger="state == 'expired'"/>
+                            <field name="tag_ids"
+                                   widget="many2many_tags"
+                                   placeholder="Etiquetas de productos (ej. C10, C11, Línea Facial, Calzado)..."
+                                   options="{'color_field': 'color'}"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Proveedor y Documento PDF">
+                            <field name="partner_id"
+                                   string="Proveedor"
+                                   context="{'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1}"/>
+                            <field name="pdf_filename" invisible="1"/>
+                            <field name="pdf_file"
+                                   filename="pdf_filename"
+                                   string="Archivo PDF del Catálogo"/>
+                            <field name="auto_index" widget="boolean_toggle"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+
+                        <group string="Vigencia y Configuración de Embeddings">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="is_valid" readonly="1" widget="boolean"/>
+                            <separator string="Parámetros de Chunking e IA Local"/>
+                            <field name="ai_provider"/>
+                            <field name="ai_model" placeholder="google/embeddinggemma-2"/>
+                            <field name="target_dimension"/>
+                            <field name="embedding_mode"/>
+                            <field name="render_dpi"/>
+                            <field name="allow_open_fallback" widget="boolean_toggle"/>
+                            <field name="index_progress" widget="progressbar"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Páginas y Embeddings (Chunks)" name="embeddings_tab">
+                            <field name="embedding_ids" readonly="1">
+                                <list string="Chunks por Página">
+                                    <field name="page_number" string="N° Pág."/>
+                                    <field name="chunk_type"
+                                           widget="badge"
+                                           decoration-info="chunk_type == 'text'"
+                                           decoration-primary="chunk_type == 'image'"/>
+                                    <field name="ai_model"/>
+                                    <field name="dimension" string="Dimensión"/>
+                                    <field name="word_count" string="Palabras"/>
+                                    <field name="embedded_image_count" string="Imágenes"/>
+                                    <field name="raw_page_text" string="Extracto de Página"/>
+                                    <field name="page_image_url" string="URL Imagen API"/>
+                                    <field name="vector_preview" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Visor del Documento (PDF)" name="pdf_viewer_tab">
+                            <field name="pdf_file"
+                                   widget="pdf_viewer"
+                                   filename="pdf_filename"
+                                   nolabel="1"/>
+                        </page>
+
+                        <page string="Descripción y Notas" name="description_tab">
+                            <field name="description"
+                                   placeholder="Notas sobre las familias de productos, condiciones comerciales o vigencias especiales..."
+                                   widget="text"/>
+                        </page>
+
+                        <page string="Registro de Procesamiento IA (Logs)" name="index_log_tab">
+                            <group>
+                                <group>
+                                    <field name="last_indexed_at" readonly="1"/>
+                                    <field name="indexed_pages" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="model_volume_path" readonly="1"/>
+                                    <field name="model_persisted_in_volume" readonly="1" widget="boolean"/>
+                                </group>
+                            </group>
+                            <field name="index_log"
+                                   placeholder="El registro detallado del chunking por página aparecerá aquí..."
+                                   widget="text"
+                                   readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda y Filtros (Search) -->
+    <record id="view_product_catalog_search" model="ir.ui.view">
+        <field name="name">product.catalog.search</field>
+        <field name="model">product.catalog</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Catálogos de Proveedores">
+                <field name="partner_id" string="Proveedor"/>
+                <field name="title" string="Título"/>
+                <field name="tag_ids" string="Etiquetas"/>
+                <field name="ai_model" string="Modelo IA"/>
+                <separator/>
+                <filter string="Vigentes Ahora" name="active_now" domain="[('state', '=', 'active')]"/>
+                <filter string="Por Iniciar" name="upcoming" domain="[('state', '=', 'upcoming')]"/>
+                <filter string="Vencidos" name="expired" domain="[('state', '=', 'expired')]"/>
+                <separator/>
+                <filter string="Chunking: No Iniciado" name="chunk_pending" domain="[('index_state', '=', 'pending')]"/>
+                <filter string="Chunking: En Curso" name="chunk_processing" domain="[('index_state', '=', 'processing')]"/>
+                <filter string="Chunking: Finalizado" name="chunk_done" domain="[('index_state', '=', 'done')]"/>
+                <filter string="Chunking: Con Error" name="chunk_error" domain="[('index_state', '=', 'error')]"/>
+                <separator/>
+                <filter string="Archivados" name="inactive" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Proveedor" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Estado de Chunking" name="group_index_state" context="{'group_by': 'index_state'}"/>
+                    <filter string="Estado de Vigencia" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Etiquetas" name="group_tags" context="{'group_by': 'tag_ids'}"/>
+                    <filter string="Modelo IA" name="group_ai_model" context="{'group_by': 'ai_model'}"/>
+                    <filter string="Tamaño de Vector" name="group_dimension" context="{'group_by': 'target_dimension'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana Principal -->
+    <record id="action_product_catalog" model="ir.actions.act_window">
+        <field name="name">Catálogos de Proveedores (PDF)</field>
+        <field name="res_model">product.catalog</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_product_catalog_search"/>
+        <field name="context">{'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Sube el primer catálogo PDF de un proveedor.
+            </p>
+            <p>
+                Asocia catálogos en PDF a tus proveedores con fechas de vigencia y etiquetas de productos.
+                El sistema realizará automáticamente el chunking por página (capturando texto e imagen) y generará los embeddings con <strong>google/embeddinggemma-2</strong>.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menús dentro de Ventas -> Productos -->
+    <menuitem id="menu_product_catalog_root"
+              name="Catálogos de Proveedores"
+              parent="sale.product_menu_catalog"
+              action="action_product_catalog"
+              sequence="30"/>
+
+    <menuitem id="menu_product_catalog_embedding_root"
+              name="Embeddings de Catálogos (Chunks)"
+              parent="sale.product_menu_catalog"
+              action="action_product_catalog_embedding"
+              sequence="35"/>
+
+</odoo>

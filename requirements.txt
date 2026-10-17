@@ -1,0 +1,13 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Procesamiento y renderizado de páginas PDF (Chunking + Captura de Imagen PNG)
+pymupdf>=1.24.0
+Pillow>=10.0.0
+
+# Inferencia local de Embeddings con Hugging Face (ej. google/embeddinggemma-2)
+torch>=2.2.0
+torchvision>=0.17.0
+sentence-transformers>=3.0.0
+transformers>=4.40.0
+accelerate>=0.30.0
+

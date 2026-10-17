@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_inherit_product_catalog" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.product.catalog</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Smart Button en cabecera del proveedor -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button"
+                        type="object"
+                        name="action_view_catalogs"
+                        icon="fa-book">
+                    <field string="Catálogos PDF" name="catalog_count" widget="statinfo"/>
+                </button>
+            </xpath>
+
+            <!-- Pestaña en el notebook del proveedor para gestionar sus catálogos PDF -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Catálogos de Productos (PDF)" name="supplier_product_catalogs">
+                    <field name="catalog_ids"
+                           context="{'default_partner_id': id, 'default_supplier_rank': 1, 'res_partner_search_mode': 'supplier'}">
+                        <list decoration-muted="not active">
+                            <field name="title"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="page_count" string="Páginas"/>
+                            <field name="embedding_count" string="Chunks"/>
+                            <field name="index_progress" widget="progressbar" string="Avance"/>
+                            <field name="index_state"
+                                   string="Chunking"
+                                   widget="badge"
+                                   decoration-muted="index_state == 'pending'"
+                                   decoration-warning="index_state == 'processing'"
+                                   decoration-success="index_state == 'done'"
+                                   decoration-danger="index_state == 'error'"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="state"
+                                   string="Vigencia"
+                                   widget="badge"
+                                   decoration-success="state == 'active'"
+                                   decoration-info="state == 'upcoming'"
+                                   decoration-danger="state == 'expired'"/>
+                            <button name="action_start_chunking"
+                                    type="object"
+                                    string="Chunking"
+                                    icon="fa-play"
+                                    class="btn-link"
+                                    invisible="index_state == 'processing'"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
